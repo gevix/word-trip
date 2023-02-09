@@ -28,24 +28,21 @@ class Trie {
 }
 
 
-function permutations(chars) {
-    // Create an empty array to store the combinations
+function permutations(letters) {
     let combinations = [];
   
-    // Helper function to generate the combinations
-    function generateCombinations(current, index) {
-      // Add the current combination to the list of combinations
-      combinations.push(current);
-      // Iterate through the remaining characters
-      for (let i = index; i < chars.length; i++) {
-        // Generate combinations with the current character
-        generateCombinations(current + chars[i], i + 1);
-        generateCombinations(current, i + 1);
+    function generate(combination, letters) {
+      combinations.push(combination);
+  
+      for (let i = 0; i < letters.length; i++) {
+        const newLetters = letters.slice(0, i).concat(letters.slice(i + 1));
+        generate(combination + letters[i], newLetters);
       }
     }
-    // Generate the combinations starting with an empty string
-    generateCombinations('', 0);
-    combinations = [... new Set(combinations)];
+  
+    generate("", letters);
+
+    combinations = [...new Set(combinations)];
     return combinations;
   }
 
@@ -60,44 +57,65 @@ function findWord (letters) {
     return result;
 }
 
-
-let myChars = 'young';
-let desiredLength = 3;
-
-// Fetch the JSON file containing the words and frequencies
-
+// create new trie
 let trie = new Trie();
-fetch('words.json')
-.then(response => response.json())
-.then(data => {
-    // Iterate through each word in the JSON file
-    for (let word in data) {
-        // Insert the word into the Trie
-        trie.insert(word);
-    }
-    console.log("JSON file loaded into Trie structure");
-    let wordsThatExist = findWord(myChars);
-    let wordsOfTheDesiredLength = [];
-    for (let i = 0; i < wordsThatExist.length; i ++) {
-        if (wordsThatExist[i].length >= desiredLength) {
-            wordsOfTheDesiredLength.push(wordsThatExist[i]);
+
+
+document.getElementById("search-button").addEventListener("click", function(){
+
+    let myChars = document.getElementById("letters").value;
+    let desiredLength = document.getElementById("min-length").value;
+
+    // Fetch the JSON file containing the words and frequencies
+
+    fetch('words.json')
+    .then(response => response.json())
+    .then(data => {
+        // Iterate through each word in the JSON file
+        for (let word in data) {
+            // Insert the word into the Trie
+            trie.insert(word);
         }
-    }
-    
-    wordsOfTheDesiredLength.sort((a, b) => {
-    return data[b].count - data[a].count;
+        console.log("JSON file loaded into Trie structure");
+
+        console.log(permutations(myChars));
+        let wordsThatExist = findWord(myChars);
+
+        // Keep all words that are longer then desiredLength
+        
+        let wordsOfTheDesiredLength = [];
+        for (let i = 0; i < wordsThatExist.length; i ++) {
+            if (wordsThatExist[i].length >= desiredLength) {
+                wordsOfTheDesiredLength.push(wordsThatExist[i]);
+            }
+        }
+
+        // Sort words by frequency
+
+        wordsOfTheDesiredLength.sort((a, b) => {
+        return data[b].count - data[a].count;
+        });
+
+        console.log(wordsOfTheDesiredLength);
+
+        const words = wordsOfTheDesiredLength;
+        const resultsDiv = document.getElementById("results");
+
+        let resultHTML = "";
+        for (let i = 0; i < words.length; i++) {
+            resultHTML += words[i];
+            if (i < words.length - 1) resultHTML += ", ";
+        }
+
+        resultsDiv.innerHTML = resultHTML;
+
+    })
+    .catch(error => console.error(error));
 
     
+
+
 });
-
-    console.log(wordsOfTheDesiredLength);
- 
-})
-.catch(error => console.error(error));
-
-
-
-
 
 
 
